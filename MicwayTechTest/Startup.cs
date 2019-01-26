@@ -6,10 +6,12 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MicwayTechTest.Models;
 
 namespace MicwayTechTest
 {
@@ -26,6 +28,10 @@ namespace MicwayTechTest
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+
+            
+            var connection = "Server=micwaytestdbinstance.caqbw1dpdyst.ap-southeast-2.rds.amazonaws.com;Initial Catalog=DriversRDSStorageDb;User ID = MicWayTest; Password = MicWayTest; MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=True;";
+            services.AddDbContext<DriversRDSStorageDbContext>(options => options.UseSqlServer(connection));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
