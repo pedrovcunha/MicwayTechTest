@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MicwayTechTest.Contracts;
 using MicwayTechTest.Models;
 using Newtonsoft.Json;
 
@@ -18,28 +19,28 @@ namespace MicwayTechTest.Controllers
     {
         public delegate object DateTimeDriverDob(string key, object value);
 
-        private readonly DriversRDSStorageDbContext _context;
+        private readonly IDriverRepository _customerRepository;
 
-        public DriversController(DriversRDSStorageDbContext context)
+        public DriversController(IDriverRepository driverRepository)
         {
-            _context = context;
+            _customerRepository = driverRepository;
         }
 
-        private bool DriverExists (int id)
+        private async Task<bool> DriverExists(int id)
         {
-            return _context.Driver.Any(c => c.Id == id);
+            return await _customerRepository.Exist(id);
         }
 
         [HttpGet]
         [Produces(typeof(DbSet<Driver>))]
         public IActionResult GetDriver()
         {
-            var results = new ObjectResult(_context.Driver)
+            var results = new ObjectResult(_customerRepository.GetAll())
             {
                 StatusCode = (int)HttpStatusCode.OK
             };
 
-            Request.HttpContext.Response.Headers.Add("X-Total-Count", _context.Driver.Count().ToString());
+            Request.HttpContext.Response.Headers.Add("X-Total-Count", _customerRepository.GetAll().Count().ToString());
 
             return results;
         }
@@ -53,7 +54,7 @@ namespace MicwayTechTest.Controllers
                 return BadRequest(ModelState);
             }
 
-            var driver = await _context.Driver.SingleOrDefaultAsync(m => m.Id == id);
+            var driver = await _customerRepository.Find(id);
             
             if (driver == null)
             {
@@ -79,13 +80,13 @@ namespace MicwayTechTest.Controllers
             // if driver id is not set at the json.
             if (driver.Id == 0)
             {
-                int totalDrivers = _context.Driver.Count();
+                int totalDrivers = _customerRepository.GetAll().Count();
                 driver.Id = totalDrivers + 1;
             }
 
 
-            _context.Driver.Add(driver);
-            await _context.SaveChangesAsync();
+            await _customerRepository.Add(driver);
+
             return CreatedAtAction("GetDriver", new { id = driver.Id }, driver);
         }
 
@@ -102,16 +103,16 @@ namespace MicwayTechTest.Controllers
             {
                 return BadRequest();
             }
-            _context.Entry(driver).State = EntityState.Modified;
+            
             try
             {
-                await _context.SaveChangesAsync();
+                await _customerRepository.Update(driver);
                 return Ok(driver);
             }
             catch (DbUpdateConcurrencyException)
             {
 
-                if (!!DriverExists(id))
+                if (!await DriverExists(id))
                 {
                     return NotFound();
                 }
@@ -131,16 +132,15 @@ namespace MicwayTechTest.Controllers
             {
                 return BadRequest(ModelState);
             }
+            
 
-            var driver = await _context.Driver.SingleOrDefaultAsync(m => m.Id == id);
-
-            if (driver == null)
+            if (! await DriverExists(id))
             {
                 return NotFound();
             }
-            _context.Driver.Remove(driver);
-            await _context.SaveChangesAsync();
-            return Ok(driver);
+            await _customerRepository.Remove(id);
+
+            return Ok();
         }
 
     }
