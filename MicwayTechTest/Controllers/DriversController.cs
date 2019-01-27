@@ -33,6 +33,7 @@ namespace MicwayTechTest.Controllers
 
         [HttpGet]
         [Produces(typeof(DbSet<Driver>))]
+        [ResponseCache(Duration = 60)]
         public IActionResult GetDriver()
         {
             var results = new ObjectResult(_customerRepository.GetAll())
@@ -47,6 +48,7 @@ namespace MicwayTechTest.Controllers
 
         [HttpGet("{id}")]
         [Produces(typeof(Driver))]
+        [ResponseCache(Duration = 60)]
         public async Task<IActionResult> GetDriver([FromRoute] int id)
         {
             if (!ModelState.IsValid)

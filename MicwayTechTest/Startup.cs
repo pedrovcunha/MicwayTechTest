@@ -33,7 +33,9 @@ namespace MicwayTechTest
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
-            
+            // Add responseCaching in thr browser.
+            services.AddResponseCaching();
+
             var connection = "Server=micwaytestdbinstance.caqbw1dpdyst.ap-southeast-2.rds.amazonaws.com;Initial Catalog=DriversRDSStorageDb;User ID = MicWayTest; Password = MicWayTest; MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=True;";
             services.AddDbContext<DriversRDSStorageDbContext>(options => options.UseSqlServer(connection));
         }
@@ -44,11 +46,13 @@ namespace MicwayTechTest
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-            }
+            } 
             else
             {
                 app.UseHsts();
             }
+
+            app.UseResponseCaching();
 
             app.UseHttpsRedirection();
             app.UseMvc();
